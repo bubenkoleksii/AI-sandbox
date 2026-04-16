@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "name": "Alice Johnson",
+    "email": "alice@test.com",
+    "address": "123 Maple St, Springfield, IL",
+    "phone": "555-1234"
+  },
+  {
+    "id": 2,
+    "name": "Bob Smith",
+    "email": "bob@test.com",
+    "address": "456 Oak St, Springfield, IL",
+    "phone": "555-5678"
+  },
+  {
+    "id": 3,
+    "name": "Charlie Brown",
+    "email": "charlie@test.com",
+    "address": "123 Main St, Omaha, NE",
+    "phone": "555-8765"
+  },
+  {
+    "id": 4,
+    "name": "Dana Rivera",
+    "email": "dana@test.com",
+    "address": "789 Pine Ave, Austin, TX",
+    "phone": "555-2468"
+  },
+  {
+    "id": 5,
+    "name": "Evan Lee",
+    "email": "evan@test.com",
+    "address": "321 Cedar Ln, Portland, OR",
+    "phone": "555-3691"
+  },
+  {
+    "id": 6,
+    "name": "Fiona O'Neil",
+    "email": "fiona@test.com",
+    "address": "88 Lake Rd, Madison, WI",
+    "phone": "555-4820"
+  },
+  {
+    "id": 7,
+    "name": "Oleksii",
+    "email": "o_b@gmail.com",
+    "address": "dsdddsdsdsd",
+    "phone": "555553424343434343"
+  },
+  {
+    "id": 8,
+    "name": "Grace Hopper",
+    "email": "grace.hopper@example.com",
+    "address": "1 Compiler Way, Arlington, VA",
+    "phone": "555-0100"
+  },
+  {
+    "id": 9,
+    "name": "Andrii",
+    "email": "andrii@gmail.com",
+    "address": "hgghgg",
+    "phone": "56554"
+  }
+]

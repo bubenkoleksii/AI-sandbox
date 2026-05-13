@@ -113,6 +113,56 @@ server.registerTool("create-user", {
         };
     }
 });
+server.registerTool("create-random-user", {
+    title: "Create Random User",
+    description: "Create a random user with fake data",
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+    },
+}, async () => {
+    const result = await server.server.request({
+        method: "sampling/createMessage",
+        params: {
+            messages: [
+                {
+                    role: "user",
+                    content: {
+                        type: "text",
+                        text: "Gene  rate fake user data. The user should have a realistic name, email, address, and phone number. " +
+                            +"Return this data as a JSON object with no other text or formatter so it can be used with JSON.parse.",
+                    },
+                },
+            ],
+            maxTokens: 1024,
+        },
+    });
+    if (result.content.type !== "text") {
+        return {
+            content: [{ type: "text", text: "Failed to generate user data" }],
+        };
+    }
+    try {
+        const userData = JSON.parse(result.content.text
+            .trim()
+            .replace(/^```json/, "")
+            .replace(/```$/, "")
+            .trim());
+        const id = await createUser(userData);
+        return {
+            content: [
+                { type: "text", text: `User ${id} created successfully` },
+            ],
+        };
+    }
+    catch {
+        return {
+            content: [{ type: "text", text: "Failed to generate user data" }],
+        };
+    }
+});
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);

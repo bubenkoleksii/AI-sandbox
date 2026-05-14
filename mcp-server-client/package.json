@@ -6,9 +6,10 @@
   "scripts": {
     "server:build": "tsc",
     "server:build:watch": "tsc --watch",
-    "server:dev": "tsx src/server.ts",
-    "server:inspect": "set DANGEROUSLY_OMIT_AUTH=true && npx @modelcontextprotocol/inspector npm run server:dev",
-    "client:dev": "tsx src/client.ts"
+    "server:dev": "tsx src/http/main.ts",
+    "server:inspect": "set DANGEROUSLY_OMIT_AUTH=true && npx @modelcontextprotocol/inspector tsx src/http/main.ts",
+    "client:dev": "tsx src/client.ts",
+    "server:dev:stdio": "tsx src/server.ts"
   },
   "author": "",
   "license": "ISC",
@@ -19,8 +20,17 @@
     "@inquirer/prompts": "^8.4.3",
     "@modelcontextprotocol/client": "^2.0.0-alpha.2",
     "@modelcontextprotocol/server": "^2.0.0-alpha.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "ai": "^6.0.182",
+    "cors": "^2.8.6",
+    "crypto": "^1.0.1",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jose": "^6.2.3",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^3.3.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

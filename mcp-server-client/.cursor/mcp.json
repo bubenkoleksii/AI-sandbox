@@ -1,17 +1,15 @@
 {
   "mcpServers": {
     "sandbox-server": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "${workspaceFolder}/build/server.js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "dev": {
-        "watch": "build/**/*.js",
-        "debug": {
-          "type": "node"
-        }
+      "url": "http://localhost:3000/mcp",
+      "auth": {
+        "CLIENT_ID": "${env:AUTH0_CLIENT_ID}",
+        "scopes": [
+          "openid",
+          "profile",
+          "mcp:read",
+          "mcp:write"
+        ]
       }
     }
   }

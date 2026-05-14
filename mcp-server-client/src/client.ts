@@ -5,7 +5,7 @@ import { generateText, jsonSchema, ToolSet } from "ai";
 
 import { confirm, input, select } from "@inquirer/prompts";
 
-import { Client, StdioClientTransport } from "@modelcontextprotocol/client";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import type { Tool, Prompt, PromptMessage } from "@modelcontextprotocol/client";
 
 const google = createGoogleGenerativeAI({
@@ -20,11 +20,25 @@ const mcp = new Client(
   { capabilities: { sampling: {} } }
 );
 
-const transport = new StdioClientTransport({
-  command: "node",
-  args: ["build/server.js"],
-  stderr: "ignore",
-});
+// HTTP transport with optional Bearer token
+const mcpUrl = process.env.MCP_RESOURCE_URI || "http://localhost:3000/mcp";
+const testToken = process.env.MCP_TEST_ACCESS_TOKEN;
+
+const requestInit: RequestInit = {};
+if (testToken) {
+  requestInit.headers = {
+    'Authorization': `Bearer ${testToken}`
+  };
+  console.log("🔐 Using Bearer token for authentication");
+} else {
+  console.log("⚠️ No test token provided - server may require authentication");
+  console.log("   Set MCP_TEST_ACCESS_TOKEN in .env with a valid Auth0 JWT");
+}
+
+const transport = new StreamableHTTPClientTransport(
+  new URL(mcpUrl),
+  { requestInit }
+);
 
 async function main() {
   console.log("🔌 Connecting to MCP server...");

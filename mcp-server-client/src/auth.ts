@@ -1,90 +1,37 @@
-import jwt from 'jsonwebtoken';
-import jwksClient from 'jwks-client';
-import { promisify } from 'util';
+import "dotenv/config";
+import { createRemoteJWKSet, jwtVerify, JWTPayload } from "jose";
 
-interface AuthState {
-  authenticated: boolean;
-  user?: {
-    sub: string;
-    email?: string;
-  };
-  authenticatedAt: Date;
-}
+// Create JWKS client for Auth0 public keys
+const JWKS = createRemoteJWKSet(
+  new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`)
+);
 
-interface JWTPayload {
-  sub: string;
-  email?: string;
-  aud: string;
-  exp: number;
-  iat: number;
-}
+/**
+ * Verify Auth0 JWT bearer token using jose library
+ * @param token JWT token to verify
+ * @returns JWT payload if valid
+ * @throws Error if token is invalid, expired, or verification fails
+ */
+export async function verifyBearer(token: string): Promise<JWTPayload> {
+  const authDomain = process.env.AUTH0_DOMAIN;
+  const audience = process.env.AUTH0_AUDIENCE;
 
-// In-memory auth state for investigation purposes
-const authSessions = new Map<string, AuthState>();
-
-const client = jwksClient({
-  jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
-  requestHeaders: {},
-  timeout: 30000,
-  cache: true,
-  rateLimit: true,
-  jwksRequestsPerMinute: 5,
-  jwksRequestsPerDay: 1,
-});
-
-const getKey = promisify(client.getSigningKey);
-
-export async function validateToken(token: string): Promise<{ valid: boolean; payload?: JWTPayload; error?: string }> {
-  try {
-    // Decode header to get kid
-    const decoded = jwt.decode(token, { complete: true });
-    if (!decoded || typeof decoded === 'string' || !decoded.header.kid) {
-      return { valid: false, error: 'Invalid token format' };
-    }
-
-    // Get signing key
-    const key = await getKey(decoded.header.kid);
-    if (!key) {
-      return { valid: false, error: 'Unable to get signing key' };
-    }
-    const signingKey = key.getPublicKey();
-
-    // Verify token
-    const payload = jwt.verify(token, signingKey, {
-      audience: process.env.AUTH0_AUDIENCE,
-      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
-      algorithms: ['RS256']
-    }) as JWTPayload;
-
-    return { valid: true, payload };
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      return { valid: false, error: 'Token expired' };
-    }
-    if (error instanceof jwt.JsonWebTokenError) {
-      return { valid: false, error: `Invalid token: ${error.message}` };
-    }
-    return { valid: false, error: 'Token validation failed' };
+  if (!authDomain || !audience) {
+    throw new Error("AUTH0_DOMAIN and AUTH0_AUDIENCE environment variables are required");
   }
+
+  const { payload } = await jwtVerify(token, JWKS, {
+    issuer: `https://${authDomain}/`,
+    audience: audience,
+    algorithms: ["RS256"],
+  });
+
+  return payload;
 }
 
-export function setAuthState(sessionId: string, state: AuthState): void {
-  authSessions.set(sessionId, state);
-}
-
-export function getAuthState(sessionId: string): AuthState | undefined {
-  return authSessions.get(sessionId);
-}
-
-export function isAuthenticated(sessionId: string): boolean {
-  const state = getAuthState(sessionId);
-  return state?.authenticated === true;
-}
-
-export function clearAuthState(sessionId: string): void {
-  authSessions.delete(sessionId);
-}
-
+/**
+ * Check if authentication bypass is enabled for testing
+ */
 export function isAuthBypassEnabled(): boolean {
   return process.env.DANGEROUSLY_OMIT_AUTH === 'true';
 }

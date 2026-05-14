@@ -7,6 +7,11 @@ import {
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { validateToken, setAuthState, getAuthState, isAuthenticated, isAuthBypassEnabled } from "./auth.js";
+import { randomBytes } from "crypto";
+
+// Generate session ID for auth state
+const sessionId = randomBytes(16).toString('hex');
 
 const server = new McpServer({
   name: "sandbox-server",
@@ -14,7 +19,7 @@ const server = new McpServer({
   description: "A sandbox MCP server for the client",
 });
 
-const usersFilePath = path.join(process.cwd(), "src", "data", "users.json");
+const usersFilePath = "C:/Development/__Ai_Squad/AI-sandbox/mcp-server-client/src/data/users.json";
 
 server.registerResource(
   "users",
@@ -208,7 +213,69 @@ server.registerTool(
       };
     }
   }
-)
+);
+
+server.registerTool(
+  "mcp_auth", 
+  {
+    title: "MCP Authentication",
+    description: "Authenticate using Auth0 JWT token",
+    inputSchema: z.object({
+      token: z.string().describe("JWT token from Auth0"),
+    }),
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  async (params) => {
+    // Check auth bypass
+    if (isAuthBypassEnabled()) {
+      setAuthState(sessionId, {
+        authenticated: true,
+        user: { sub: "bypass-user", email: "bypass@test.com" },
+        authenticatedAt: new Date(),
+      });
+      return {
+        content: [
+          { type: "text", text: "Authentication bypassed (DANGEROUSLY_OMIT_AUTH=true)" },
+        ],
+      };
+    }
+
+    // Validate token
+    const result = await validateToken(params.token);
+    
+    if (!result.valid) {
+      return {
+        content: [
+          { type: "text", text: `Authentication failed: ${result.error}` },
+        ],
+      };
+    }
+
+    // Set auth state
+    setAuthState(sessionId, {
+      authenticated: true,
+      user: {
+        sub: result.payload!.sub,
+        email: result.payload!.email,
+      },
+      authenticatedAt: new Date(),
+    });
+
+    return {
+      content: [
+        { 
+          type: "text", 
+          text: `Authentication successful. User: ${result.payload!.sub}${result.payload!.email ? ` (${result.payload!.email})` : ''}` 
+        },
+      ],
+    };
+  },
+);
 
 async function main() {
   const transport = new StdioServerTransport();
